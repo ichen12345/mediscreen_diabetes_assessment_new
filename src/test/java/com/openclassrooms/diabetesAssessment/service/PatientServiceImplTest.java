@@ -1,8 +1,7 @@
-package com.openclassrooms.notes.service;
+package com.openclassrooms.diabetesAssessment.service;
 
-import com.openclassrooms.notes.entity.Patient;
-import com.openclassrooms.notes.repository.PatientRepository;
-import com.openclassrooms.notes.service.PatientServiceImpl;
+import com.openclassrooms.diabetesAssessment.entity.Patient;
+import com.openclassrooms.diabetesAssessment.repository.PatientRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,7 +20,7 @@ import static org.mockito.Mockito.*;
 public class PatientServiceImplTest {
 
     @InjectMocks
-    private PatientServiceImpl patientService;
+    private AssessmentServiceImpl patientService;
 
     @Mock
     private PatientRepository patientRepository;

@@ -1,4 +1,4 @@
-package com.openclassrooms.notes.service;
+package com.openclassrooms.diabetesAssessment.service;
 
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;

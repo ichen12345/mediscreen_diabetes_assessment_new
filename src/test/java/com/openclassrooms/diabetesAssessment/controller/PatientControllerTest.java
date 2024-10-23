@@ -1,8 +1,7 @@
-package com.openclassrooms.notes.controller;
+package com.openclassrooms.diabetesAssessment.controller;
 
-import com.openclassrooms.notes.entity.Patient;
-import com.openclassrooms.notes.service.PatientService;
-import com.openclassrooms.notes.controller.PatientController;
+import com.openclassrooms.diabetesAssessment.entity.Patient;
+import com.openclassrooms.diabetesAssessment.service.AssessmentService;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,7 +22,7 @@ public class PatientControllerTest {
     private PatientController patientController;
 
     @Mock
-    private PatientService patientService;
+    private AssessmentService assessmentService;
 
     private Patient patient;
 
@@ -37,7 +36,7 @@ public class PatientControllerTest {
         String note = "New patient note";
 
         // Mock the behavior of the service
-        when(patientService.updateNotes(2L, note)).thenReturn(patient);
+        when(assessmentService.updateNotes(2L, note)).thenReturn(patient);
 
         // Call the controller method
         Patient result = patientController.addNote(2L, note);
@@ -45,7 +44,7 @@ public class PatientControllerTest {
         // Verify the results
         assertNotNull(result);
         assertEquals(patient, result);
-        verify(patientService, times(1)).updateNotes(2L, note);
+        verify(assessmentService, times(1)).updateNotes(2L, note);
     }
 
     @Test
@@ -53,7 +52,7 @@ public class PatientControllerTest {
         String note = "New patient note";
 
         // Mock the behavior of the service to throw an exception
-        when(patientService.updateNotes(2L, note)).thenThrow(new EntityNotFoundException("Patient not found with ID: 2"));
+        when(assessmentService.updateNotes(2L, note)).thenThrow(new EntityNotFoundException("Patient not found with ID: 2"));
 
         // Call the controller method and expect an exception
         EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> {
@@ -62,6 +61,6 @@ public class PatientControllerTest {
 
         // Verify the exception message
         assertEquals("Patient not found with ID: 2", exception.getMessage());
-        verify(patientService, times(1)).updateNotes(2L, note);
+        verify(assessmentService, times(1)).updateNotes(2L, note);
     }
 }
