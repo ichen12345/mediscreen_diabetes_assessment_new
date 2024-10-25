@@ -1,7 +1,11 @@
 package com.openclassrooms.diabetesAssessment.service;
 
 import com.openclassrooms.diabetesAssessment.entity.Patient;
+import com.openclassrooms.diabetesAssessment.entity.PatientNotesResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -26,20 +30,33 @@ public class AssessmentServiceImpl implements AssessmentService {
 
     @Override
     public String assessRisk(Long patientId) {
-        Patient patient = restTemplate.getForObject(DEMOGRAPHIC_SERVICE_URL + "/patients/" + patientId, Patient.class);
+
+        // Fetch patient details
+        Patient patient = restTemplate.getForObject(DEMOGRAPHIC_SERVICE_URL + "/api/patients/" + patientId, Patient.class);
         if (patient == null) {
             return "Patient not found";
         }
+        System.out.println("Date of Birth: " + patient.getDateOfBirth());
+        // Fetch doctor notes using the correct DTO
+        String patId = String.valueOf(patientId);
+        PatientNotesResponse response = restTemplate.getForObject(NOTES_SERVICE_URL + "/patHistory/" + patId, PatientNotesResponse.class);
+        List<String> doctorNotes = response.getNote(); // Extract the notes
+        System.out.println("Doctor notes: " + doctorNotes);
 
-        List<String> doctorNotes = restTemplate.getForObject(NOTES_SERVICE_URL + "/patHistory/" + patientId, List.class);
+        // Calculate the number of trigger words in doctor notes
         int triggerCount = countTriggers(doctorNotes);
         int age = calculateAge(patient.getDateOfBirth());
+        patient.setAge(age);
+        System.out.println("Calculated age: " + age);
 
+        // Determine risk level based on triggers, age, and sex
         String riskLevel = determineRiskLevel(triggerCount, age, patient.getSex());
+        System.out.println("Risk level determined: " + riskLevel);
 
         return String.format("Patient: %s %s (age %d) diabetes assessment is: %s",
                 patient.getGivenName(), patient.getFamilyName(), age, riskLevel);
     }
+
 
     private String determineRiskLevel(int triggerCount, int age, String sex) {
         if (triggerCount == 0) {

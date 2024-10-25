@@ -7,13 +7,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/access")
+@RequestMapping("/assess")
 public class PatientController {
     @Autowired
     AssessmentService assessmentService;
 
     @PostMapping("/id")
     public ResponseEntity<String> assessPatient(@RequestParam("patId") Long patId) {
+        System.out.println("Received patId: " + patId); // Add this log statement
         String result = assessmentService.assessRisk(patId);
         if ("Patient not found".equals(result)) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Patient not found");
