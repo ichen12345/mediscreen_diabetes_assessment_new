@@ -74,32 +74,37 @@ public class AssessmentServiceImpl implements AssessmentService {
                 patient.getGivenName(), patient.getFamily(), age, riskLevel);
     }
 
-    private String determineRiskLevel(int triggerCount, int age, String sex) {
+    protected String determineRiskLevel(int triggerCount, int age, String sex) {
         if (triggerCount == 0) {
             return "None";
-        } else if (triggerCount >= 2 && age > 30) {
-            return "Borderline";
-        } else if (age < 30) {
-            if (sex.equalsIgnoreCase("M") && triggerCount >= 3) {
-                return "In danger";
-            } else if (sex.equalsIgnoreCase("F") && triggerCount >= 4) {
-                return "In danger";
-            } else if (sex.equalsIgnoreCase("M") && triggerCount >= 5) {
-                return "Early Onset";
-            } else if (sex.equalsIgnoreCase("F") && triggerCount >= 7) {
-                return "Early Onset";
-            }
         } else if (age > 30) {
-            if (triggerCount >= 6) {
-                return "In danger";
-            } else if (triggerCount >= 8) {
-                return "Early Onset";
+            if (triggerCount >= 8) {
+                return "Early Onset"; // Over 30 and 8 or more triggers
+            } else if (triggerCount >= 6) {
+                return "In danger"; // Over 30 and 6 triggers
+            } else if (triggerCount >= 2) {
+                return "Borderline"; // Over 30 and 2 or more triggers
+            }
+        } else { // Age <= 30
+            if (sex.equalsIgnoreCase("M")) {
+                if (triggerCount >= 5) {
+                    return "Early Onset"; // Under 30 male with 5 or more triggers
+                } else if (triggerCount >= 3) {
+                    return "In danger"; // Under 30 male with 3 triggers
+                }
+            } else if (sex.equalsIgnoreCase("F")) {
+                if (triggerCount >= 7) {
+                    return "Early Onset"; // Under 30 female with 7 or more triggers
+                } else if (triggerCount >= 4) {
+                    return "In danger"; // Under 30 female with 4 triggers
+                }
             }
         }
-        return "None";
+        return "None"; // Fallback, though the case should be covered above
     }
 
-    private int countTriggers(List<String> doctorNotes) {
+
+    protected int countTriggers(List<String> doctorNotes) {
         int count = 0;
         for (String note : doctorNotes) {
             for (String trigger : TRIGGERS) {
@@ -112,7 +117,7 @@ public class AssessmentServiceImpl implements AssessmentService {
         return count;
     }
 
-    private int calculateAge(LocalDate dob) {
+    protected int calculateAge(LocalDate dob) {
         return java.time.Period.between(dob, java.time.LocalDate.now()).getYears();
     }
 }
