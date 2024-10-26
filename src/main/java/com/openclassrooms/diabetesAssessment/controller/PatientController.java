@@ -15,11 +15,21 @@ public class PatientController {
     @PostMapping("/id")
     public ResponseEntity<String> assessPatient(@RequestParam("patId") Long patId) {
         System.out.println("Received patId: " + patId); // Add this log statement
-        String result = assessmentService.assessRisk(patId);
+        String result = assessmentService.assessRiskById(patId);
         if ("Patient not found".equals(result)) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Patient not found");
         }
 
+        return ResponseEntity.ok(result);
+    }
+
+    @PostMapping("/name")
+    public ResponseEntity<String> assessPatientByName(@RequestParam String family, @RequestParam String given) {
+        System.out.println("Received family: " + family + ", given: " + given); // Log parameters
+        String result = assessmentService.assessRiskByName(family, given);
+        if ("Patient not found".equals(result)) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Patient not found");
+        }
         return ResponseEntity.ok(result);
     }
 

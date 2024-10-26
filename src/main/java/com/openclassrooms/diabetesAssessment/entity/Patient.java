@@ -19,7 +19,7 @@ public class Patient {
     private String givenName;
 
     @JsonProperty("family")
-    private String familyName;
+    private String family;
 
     @JsonProperty("dob")  // Mapping "dob" from JSON to "dateOfBirth"
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
