@@ -2,6 +2,7 @@ package com.openclassrooms.diabetesAssessment.service;
 
 import com.openclassrooms.diabetesAssessment.entity.Patient;
 import com.openclassrooms.diabetesAssessment.entity.PatientNotesResponse;
+import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -43,33 +44,57 @@ public class AssessmentServiceImplTest {
 
     @Test
     void testAssessRiskById_Success() {
-        // Mock the patient response from the REST call
+        // Arrange
+        Long patientId = 1L;
+        Patient patient = new Patient();
+        patient.setPatientId(patientId);
+        patient.setFamily("Doe");
+        patient.setGivenName("John");
+        patient.setDateOfBirth(LocalDate.of(1985, 5, 15)); // Set a sample DOB
+        patient.setSex("M"); // Set a sample sex
+
+        // Mock the REST call to return the patient
         when(restTemplate.getForObject(anyString(), eq(Patient.class))).thenReturn(patient);
 
-        // Mock the notes response from the REST call
+        // Mock the notes response
         PatientNotesResponse notesResponse = new PatientNotesResponse();
-        notesResponse.setNote(List.of("Body Weight", "Smoker")); // Two triggers
+        notesResponse.setNote(List.of("Body Weight", "Smoker")); // Example notes that trigger a risk
         when(restTemplate.getForObject(anyString(), eq(PatientNotesResponse.class))).thenReturn(notesResponse);
 
-        // Call the method under test
-        String result = assessmentService.assessRiskById(1L);
+        // Act
+        String result = assessmentService.assessRiskById(patientId);
 
-        // Validate the result
+        // Assert
         assertNotNull(result);
-        assertTrue(result.contains("diabetes assessment is: Borderline"));
+        assertTrue(result.contains("diabetes assessment is: Borderline")); // Update based on expected output
     }
+
 
     @Test
     void testAssessRiskById_PatientNotFound() {
+        // Arrange
+        Long patientId = 2L;
+        // Mock the REST call to return null, simulating patient not found
         when(restTemplate.getForObject(anyString(), eq(Patient.class))).thenReturn(null);
 
-        String result = assessmentService.assessRiskById(1L);
+        // Act & Assert
+        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> {
+            assessmentService.assessRiskById(patientId);
+        });
 
-        assertEquals("Patient not found", result);
+        assertEquals("Patient not found with ID: " + patientId, exception.getMessage());
     }
+
 
     @Test
     void testAssessRiskByName_Success() {
+        // Arrange
+        Patient patient = new Patient();
+        patient.setPatientId(1L);
+        patient.setFamily("Doe");
+        patient.setGivenName("John");
+        patient.setDateOfBirth(LocalDate.of(1990, 1, 1)); // Setting a valid DOB
+
         // Mock the patient response from the REST call
         when(restTemplate.getForObject(anyString(), eq(Patient.class))).thenReturn(patient);
 
@@ -88,12 +113,44 @@ public class AssessmentServiceImplTest {
 
     @Test
     void testAssessRiskByName_PatientNotFound() {
+        // Arrange
+        String familyName = "Doe";
+        String givenName = "John";
+
+        // Mock the patient response to be null, simulating patient not found
         when(restTemplate.getForObject(anyString(), eq(Patient.class))).thenReturn(null);
 
-        String result = assessmentService.assessRiskByName("Doe", "John");
-
-        assertEquals("Patient not found", result);
+        // Act & Assert
+        assertThrows(EntityNotFoundException.class, () -> {
+            assessmentService.assessRiskByName(familyName, givenName);
+        });
     }
+
+    @Test
+    void testAssessRiskByName_NoDateOfBirth() {
+        // Arrange
+        Patient patient = new Patient();
+        patient.setPatientId(1L);
+        patient.setFamily("Doe");
+        patient.setGivenName("John");
+        patient.setDateOfBirth(null); // No DOB
+
+        // Mock the patient response from the REST call
+        when(restTemplate.getForObject(anyString(), eq(Patient.class))).thenReturn(patient);
+
+        // Mock the notes response from the REST call
+        PatientNotesResponse notesResponse = new PatientNotesResponse();
+        notesResponse.setNote(List.of("Body Height", "Abnormal")); // Two triggers
+        when(restTemplate.getForObject(anyString(), eq(PatientNotesResponse.class))).thenReturn(notesResponse);
+
+        // Act & Assert
+        assertThrows(IllegalArgumentException.class, () -> {
+            assessmentService.assessRiskByName("Doe", "John");
+        });
+    }
+
+
+
 
     @Test
     void testCountTriggers() {

@@ -2,14 +2,18 @@ package com.openclassrooms.diabetesAssessment.service;
 
 import com.openclassrooms.diabetesAssessment.entity.Patient;
 import com.openclassrooms.diabetesAssessment.entity.PatientNotesResponse;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -30,15 +34,26 @@ public class AssessmentServiceImpl implements AssessmentService {
 
 
     public String assessRiskByName(String family, String given) {
-        // Fetch patient details by family
-        String url = DEMOGRAPHIC_SERVICE_URL + "/api/patients/search?family=" + family + "&given=" + given;
-        System.out.println("Fetching patient from: " + url); // Log the URL for debugging
-        Patient patient = restTemplate.getForObject(url, Patient.class);
-        if (patient == null) {
-            return "Patient not found";
+        try {
+            // Fetch patient details by name
+            Patient patient = restTemplate.getForObject(
+                    DEMOGRAPHIC_SERVICE_URL + "/api/patients/search?family=" + family + "&given=" + given, Patient.class);
+
+            if (patient == null) {
+                throw new EntityNotFoundException("Patient not found with name: " + family + " " + given);
+            }
+
+            // Proceed with risk assessment
+            return assessRiskForPatient(patient);
+        } catch (HttpClientErrorException e) {
+            if (e.getStatusCode() == HttpStatus.NOT_FOUND) {
+                throw new EntityNotFoundException("Patient not found with name: " + family + " " + given);
+            } else {
+                throw e; // rethrow other HTTP exceptions if necessary
+            }
         }
-        return assessRiskForPatient(patient);
     }
+
 
 
 
@@ -46,8 +61,10 @@ public class AssessmentServiceImpl implements AssessmentService {
         // Fetch patient details by ID
         Patient patient = restTemplate.getForObject(
                 DEMOGRAPHIC_SERVICE_URL + "/api/patients/" + patientId, Patient.class);
+
+        // Throw an exception if the patient is not found
         if (patient == null) {
-            return "Patient not found";
+            throw new EntityNotFoundException("Patient not found with ID: " + patientId);
         }
 
         return assessRiskForPatient(patient);
@@ -58,11 +75,19 @@ public class AssessmentServiceImpl implements AssessmentService {
         String patId = String.valueOf(patient.getPatientId());
         PatientNotesResponse response = restTemplate.getForObject(
                 NOTES_SERVICE_URL + "/patHistory/" + patId, PatientNotesResponse.class);
-        List<String> doctorNotes = response.getNote();
+
+        // Check if response is null
+        List<String> doctorNotes = (response != null) ? response.getNote() : Collections.emptyList();
         System.out.println("Doctor notes: " + doctorNotes);
 
         // Calculate trigger count, age, and determine risk
         int triggerCount = countTriggers(doctorNotes);
+
+        // Check if dateOfBirth is null
+        if (patient.getDateOfBirth() == null) {
+            throw new IllegalArgumentException("Date of birth is required for assessment");
+        }
+
         int age = calculateAge(patient.getDateOfBirth());
         patient.setAge(age);
         System.out.println("Calculated age: " + age);
@@ -73,6 +98,7 @@ public class AssessmentServiceImpl implements AssessmentService {
         return String.format("Patient: %s %s (age %d) diabetes assessment is: %s",
                 patient.getGivenName(), patient.getFamily(), age, riskLevel);
     }
+
 
     protected String determineRiskLevel(int triggerCount, int age, String sex) {
         if (triggerCount == 0) {

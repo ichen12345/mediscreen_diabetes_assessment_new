@@ -1,6 +1,7 @@
 package com.openclassrooms.diabetesAssessment.controller;
 
 import com.openclassrooms.diabetesAssessment.service.AssessmentService;
+import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -9,6 +10,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.HttpClientErrorException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
@@ -28,35 +30,67 @@ public class PatientControllerTest {
     }
 
     @Test
-    public void testAssessPatient_Found() {
+    void testAssessPatient_Success() {
         Long patId = 1L;
-        String riskAssessment = "Low risk";
+        String expectedResult = "Assessment result here"; // Expected result from the service
 
-        // Mock the service response for a valid patient ID
-        when(assessmentService.assessRiskById(patId)).thenReturn(riskAssessment);
+        // Mock the service call to return a successful result
+        when(assessmentService.assessRiskById(patId)).thenReturn(expectedResult);
 
         // Call the controller method
         ResponseEntity<String> response = patientController.assessPatient(patId);
 
-        // Verify the response
+        // Verify the results
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(riskAssessment, response.getBody());
+        assertEquals(expectedResult, response.getBody());
         verify(assessmentService, times(1)).assessRiskById(patId);
     }
 
     @Test
-    public void testAssessPatient_NotFound() {
-        Long patId = 1L;
+    void testAssessPatient_PatientNotFound() {
+        Long patId = 2L;
 
-        // Mock the service response to return "Patient not found"
-        when(assessmentService.assessRiskById(patId)).thenReturn("Patient not found");
+        // Mock the service call to throw an EntityNotFoundException
+        when(assessmentService.assessRiskById(patId)).thenThrow(new EntityNotFoundException("Patient not found with ID: " + patId));
 
         // Call the controller method
         ResponseEntity<String> response = patientController.assessPatient(patId);
 
-        // Verify the response
+        // Verify the results
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
         assertEquals("Patient not found", response.getBody());
+        verify(assessmentService, times(1)).assessRiskById(patId);
+    }
+
+    @Test
+    void testAssessPatient_HttpClientError() {
+        Long patId = 3L;
+
+        // Mock the service call to throw an HttpClientErrorException
+        when(assessmentService.assessRiskById(patId)).thenThrow(new HttpClientErrorException(HttpStatus.NOT_FOUND));
+
+        // Call the controller method
+        ResponseEntity<String> response = patientController.assessPatient(patId);
+
+        // Verify the results
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertEquals("Patient not found", response.getBody());
+        verify(assessmentService, times(1)).assessRiskById(patId);
+    }
+
+    @Test
+    void testAssessPatient_InternalServerError() {
+        Long patId = 4L;
+
+        // Mock the service call to throw a general exception
+        when(assessmentService.assessRiskById(patId)).thenThrow(new RuntimeException("Unexpected error"));
+
+        // Call the controller method
+        ResponseEntity<String> response = patientController.assessPatient(patId);
+
+        // Verify the results
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertEquals("An error occurred", response.getBody());
         verify(assessmentService, times(1)).assessRiskById(patId);
     }
 
@@ -83,8 +117,8 @@ public class PatientControllerTest {
         String familyName = "Doe";
         String givenName = "Jane";
 
-        // Mock the service response to return "Patient not found"
-        when(assessmentService.assessRiskByName(familyName, givenName)).thenReturn("Patient not found");
+        // Mock the service to throw an EntityNotFoundException
+        when(assessmentService.assessRiskByName(familyName, givenName)).thenThrow(new EntityNotFoundException("Patient not found"));
 
         // Call the controller method
         ResponseEntity<String> response = patientController.assessPatientByName(familyName, givenName);
@@ -94,4 +128,22 @@ public class PatientControllerTest {
         assertEquals("Patient not found", response.getBody());
         verify(assessmentService, times(1)).assessRiskByName(familyName, givenName);
     }
+
+    @Test
+    public void testAssessPatientByName_InternalServerError() {
+        String familyName = "Doe";
+        String givenName = "Unknown";
+
+        // Mock the service to throw a generic Exception
+        when(assessmentService.assessRiskByName(familyName, givenName)).thenThrow(new RuntimeException("Unexpected error"));
+
+        // Call the controller method
+        ResponseEntity<String> response = patientController.assessPatientByName(familyName, givenName);
+
+        // Verify the response
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertEquals("An error occurred", response.getBody());
+        verify(assessmentService, times(1)).assessRiskByName(familyName, givenName);
+    }
+
 }
