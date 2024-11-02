@@ -54,8 +54,6 @@ public class AssessmentServiceImpl implements AssessmentService {
     }
 
 
-
-
     public String assessRiskById(Long patientId) {
         // Fetch patient details by ID
         Patient patient = restTemplate.getForObject(
