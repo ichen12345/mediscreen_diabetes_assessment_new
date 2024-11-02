@@ -2,7 +2,6 @@ package com.openclassrooms.diabetesAssessment.service;
 
 import com.openclassrooms.diabetesAssessment.entity.Patient;
 import com.openclassrooms.diabetesAssessment.entity.PatientNotesResponse;
-import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -11,6 +10,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.client.RestTemplate;
 
+import javax.persistence.EntityNotFoundException;
 import java.time.LocalDate;
 import java.util.List;
 

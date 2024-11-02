@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>Patient Assessment</title>
+</head>
+<body>
+<h1>Patient Assessment Result</h1>
+<div th:if="${assessmentResult}">
+  <p th:text="${assessmentResult}"></p>
+</div>
+<div th:if="${errorMessage}">
+  <p th:text="${errorMessage}"></p>
+</div>
+<a href="/patients">Back to Patient List</a>
+</body>
+</html>

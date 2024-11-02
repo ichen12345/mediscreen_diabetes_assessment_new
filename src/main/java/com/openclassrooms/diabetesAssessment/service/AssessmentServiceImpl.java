@@ -2,16 +2,15 @@ package com.openclassrooms.diabetesAssessment.service;
 
 import com.openclassrooms.diabetesAssessment.entity.Patient;
 import com.openclassrooms.diabetesAssessment.entity.PatientNotesResponse;
-import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import javax.persistence.EntityNotFoundException;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
@@ -74,16 +73,15 @@ public class AssessmentServiceImpl implements AssessmentService {
         // Fetch doctor notes
         String patId = String.valueOf(patient.getPatientId());
         PatientNotesResponse response = restTemplate.getForObject(
-                NOTES_SERVICE_URL + "/patHistory/" + patId, PatientNotesResponse.class);
+                NOTES_SERVICE_URL + "/api/patHistory/" + patId, PatientNotesResponse.class);
 
-        // Check if response is null
         List<String> doctorNotes = (response != null) ? response.getNote() : Collections.emptyList();
         System.out.println("Doctor notes: " + doctorNotes);
 
         // Calculate trigger count, age, and determine risk
         int triggerCount = countTriggers(doctorNotes);
+        System.out.println("Final trigger count: " + triggerCount); // Debug statement
 
-        // Check if dateOfBirth is null
         if (patient.getDateOfBirth() == null) {
             throw new IllegalArgumentException("Date of birth is required for assessment");
         }
@@ -100,6 +98,7 @@ public class AssessmentServiceImpl implements AssessmentService {
     }
 
 
+
     protected String determineRiskLevel(int triggerCount, int age, String sex) {
         if (triggerCount == 0) {
             return "None";
@@ -112,13 +111,13 @@ public class AssessmentServiceImpl implements AssessmentService {
                 return "Borderline"; // Over 30 and 2 or more triggers
             }
         } else { // Age <= 30
-            if (sex.equalsIgnoreCase("M")) {
+            if ("M".equalsIgnoreCase(sex)) {
                 if (triggerCount >= 5) {
                     return "Early Onset"; // Under 30 male with 5 or more triggers
                 } else if (triggerCount >= 3) {
                     return "In danger"; // Under 30 male with 3 triggers
                 }
-            } else if (sex.equalsIgnoreCase("F")) {
+            } else if ("F".equalsIgnoreCase(sex)) {
                 if (triggerCount >= 7) {
                     return "Early Onset"; // Under 30 female with 7 or more triggers
                 } else if (triggerCount >= 4) {
@@ -133,17 +132,30 @@ public class AssessmentServiceImpl implements AssessmentService {
     protected int countTriggers(List<String> doctorNotes) {
         int count = 0;
         for (String note : doctorNotes) {
+            System.out.println("Checking note: " + note); // Debug output for each note
             for (String trigger : TRIGGERS) {
-                if (note.contains(trigger)) {
+                // Check if the note contains the trigger (case-insensitive)
+                if (note.toLowerCase().contains(trigger.toLowerCase())) {
                     count++;
-                    break; // Stop checking this note after finding one trigger
+                    System.out.println("Trigger found: " + trigger); // Debug output for found trigger
+                    // No break statement here, continue checking for more triggers in the same note
                 }
             }
         }
+        System.out.println("Total trigger count: " + count); // Final count output
         return count;
     }
 
     protected int calculateAge(LocalDate dob) {
         return java.time.Period.between(dob, java.time.LocalDate.now()).getYears();
     }
+
+    public List<Patient> getAllPatients() {
+        return restTemplate.exchange(
+                DEMOGRAPHIC_SERVICE_URL + "/api/patients",
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<List<Patient>>() {}).getBody();
+    }
+
 }
