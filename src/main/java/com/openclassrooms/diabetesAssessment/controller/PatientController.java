@@ -12,12 +12,20 @@ import org.springframework.web.client.HttpClientErrorException;
 
 import javax.persistence.EntityNotFoundException;
 
+/**
+ * Handle assessment results requests for patients
+ */
 @RestController
 @RequestMapping("/assess")
 public class PatientController {
     @Autowired
     AssessmentService assessmentService;
-
+    /**
+     * assess diabetes risk for patient by patient id
+     *
+     * @param patId
+     * @return risk level
+     */
     @PostMapping("/id")
     public ResponseEntity<String> assessPatient(@RequestParam("patId") Long patId) {
         System.out.println("Received patId: " + patId); // Add this log statement
@@ -36,7 +44,13 @@ public class PatientController {
         }
     }
 
-
+    /**
+     * assess diabetes risk for patient by patient name
+     *
+     * @param family
+     * @param given
+     * @return risk level
+     */
     @PostMapping("/name")
     public ResponseEntity<String> assessPatientByName(@RequestParam String family, @RequestParam String given) {
         System.out.println("Received family: " + family + ", given: " + given); // Log parameters
