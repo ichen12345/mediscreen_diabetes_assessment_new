@@ -2,13 +2,10 @@ version: '3.8'
 
 services:
   assessment:
-    container_name: assessment
     build: ./  # Assuming Dockerfile is in the root of this directory
     ports:
       - "8083:8083"
     environment:
-#      DEMOGRAPHIC_URL: http://demographics:8081  # Using the service name for Docker networking
-#      NOTES_URL: http://notes-service:8082  # Same here for the notes service
       SPRING_PROFILES_ACTIVE: docker
     networks:
       - app-network
@@ -17,7 +14,6 @@ services:
       - notes-service
 
   demographics:
-    container_name: assessment-demographics-service
     image: mediscreen-demographics:latest
     ports:
       - "8081:8081"
@@ -44,7 +40,6 @@ services:
       - app-network
 
   notes-service:
-    container_name: assessment-notes
     image: notes-notes:latest
     ports:
       - "8082:8082"
