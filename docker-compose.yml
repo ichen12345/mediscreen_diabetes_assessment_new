@@ -1,29 +1,79 @@
 version: '3.8'
+
 services:
+  # Assessment Service
   assessment:
-    container_name: app-assessment
+    container_name: assessment
     build: ./
     ports:
       - "8083:8083"
-#    depends_on:
-#      - mongo
-#    networks:
-#      - assessment-network
-#
-#  mongo:
-#    image: mongo:latest
-#    container_name: mongo-db
-#    ports:
-#      - "27018:27018"
-#    networks:
-#      - assessment-network
-#    volumes:
-#      - mongo-data:/data/db
-#    restart: always
+    environment:
+      DEMOGRAPHIC_URL: http://demographics:8081  # Use service name for demographics
+      NOTES_URL: http://notes-service:8082  # Use service name for notes
+    networks:
+      - app-network
+    depends_on:
+      - demographics
+      - notes-service
+
+  # Demographics Service
+  demographics:
+    container_name: assessment-demographics
+    image: mediscreen-demographics:latest
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_DATASOURCE_PASSWORD: password
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_URL: jdbc:postgresql://dbpostgresql:5432/demographics
+    depends_on:
+      - dbpostgresql
+    networks:
+      - app-network
+
+  # PostgreSQL Database for Demographics
+  dbpostgresql:
+    image: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRES_USER: postgres
+      POSTGRES_DB: demographics
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+  # Notes Service
+  notes-service:
+    container_name: assessment-notes
+    image: notes-notes:latest
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://mongodb:27017/patientnotes
+    depends_on:
+      - mongodb
+    networks:
+      - app-network
+
+  # MongoDB Database for Notes
+  mongodb:
+    image: mongo
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: patientnotes
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - app-network
 
 networks:
-  assessment-network:
-#
-#volumes:
-#  mongo-data:
-#    driver: local
+  app-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  mongo_data:

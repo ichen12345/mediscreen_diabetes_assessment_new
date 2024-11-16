@@ -3,6 +3,7 @@ package com.openclassrooms.diabetesAssessment.service;
 import com.openclassrooms.diabetesAssessment.entity.Patient;
 import com.openclassrooms.diabetesAssessment.entity.PatientNotesResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -21,8 +22,10 @@ public class AssessmentServiceImpl implements AssessmentService {
     @Autowired
     private RestTemplate restTemplate;
 
-    private final String DEMOGRAPHIC_SERVICE_URL = "http://localhost:8081";
-    private final String NOTES_SERVICE_URL = "http://localhost:8082";
+    @Value("${DEMOGRAPHIC_URL}")
+    private String DEMOGRAPHIC_SERVICE_URL;
+    @Value("${NOTES_URL}")
+    private String NOTES_SERVICE_URL;
 
     private static final List<String> TRIGGERS = List.of(
             "Hemoglobin A1C", "Microalbumin", "Body Height",
