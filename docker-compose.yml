@@ -1,24 +1,23 @@
 version: '3.8'
 
 services:
-  # Assessment Service
   assessment:
     container_name: assessment
-    build: ./
+    build: ./  # Assuming Dockerfile is in the root of this directory
     ports:
       - "8083:8083"
     environment:
-      DEMOGRAPHIC_URL: http://demographics:8081  # Use service name for demographics
-      NOTES_URL: http://notes-service:8082  # Use service name for notes
+#      DEMOGRAPHIC_URL: http://demographics:8081  # Using the service name for Docker networking
+#      NOTES_URL: http://notes-service:8082  # Same here for the notes service
+      SPRING_PROFILES_ACTIVE: docker
     networks:
       - app-network
     depends_on:
       - demographics
       - notes-service
 
-  # Demographics Service
   demographics:
-    container_name: assessment-demographics
+    container_name: assessment-demographics-service
     image: mediscreen-demographics:latest
     ports:
       - "8081:8081"
@@ -31,7 +30,6 @@ services:
     networks:
       - app-network
 
-  # PostgreSQL Database for Demographics
   dbpostgresql:
     image: postgres
     ports:
@@ -45,7 +43,6 @@ services:
     networks:
       - app-network
 
-  # Notes Service
   notes-service:
     container_name: assessment-notes
     image: notes-notes:latest
@@ -58,7 +55,6 @@ services:
     networks:
       - app-network
 
-  # MongoDB Database for Notes
   mongodb:
     image: mongo
     ports:

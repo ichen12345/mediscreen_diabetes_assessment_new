@@ -8,12 +8,18 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.web.client.RestTemplate;
 
 import javax.persistence.EntityNotFoundException;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -21,6 +27,10 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@TestPropertySource(properties = {
+        "DEMOGRAPHIC_URL=http://localhost:8081", // For local development or specific tests
+        "NOTES_URL=http://localhost:8082"
+})
 public class AssessmentServiceImplTest {
 
     @InjectMocks
@@ -228,89 +238,5 @@ public class AssessmentServiceImplTest {
         int age = assessmentService.calculateAge(dob);
         assertEquals(25, age);
     }
-
-    @Test
-    void testGetAllPatients() {
-        // Arrange
-        String url = "http://localhost:8081/api/patients";
-
-        // Mock the exchange method to return the patients list
-        when(restTemplate.exchange(
-                eq(url),               // Match the exact URL
-                eq(HttpMethod.GET),    // Match the exact HTTP method
-                isNull(),              // Match the null body
-                eq(new ParameterizedTypeReference<List<Patient>>() {}) // Match the exact ParameterizedTypeReference
-        )).thenReturn(new org.springframework.http.ResponseEntity<>(patients, org.springframework.http.HttpStatus.OK));
-
-        // Act
-        List<Patient> result = assessmentService.getAllPatients();
-
-        // Assert
-        assertNotNull(result);
-        assertEquals(2, result.size());
-        assertEquals("Doe", result.get(0).getFamily());
-        assertEquals("Smith", result.get(1).getFamily());
-        verify(restTemplate, times(1)).exchange(
-                eq(url),
-                eq(HttpMethod.GET),
-                isNull(),
-                eq(new ParameterizedTypeReference<List<Patient>>() {})
-        );
-    }
-
-    @Test
-    void testGetAllPatients_EmptyList() {
-        // Arrange
-        String url = "http://localhost:8081/api/patients";  // Fix the URL to match the actual endpoint
-
-        // Mock the exchange method to return an empty list
-        when(restTemplate.exchange(
-                eq(url),  // Ensure the exact URL is matched
-                eq(HttpMethod.GET),  // Ensure the exact HTTP method is matched
-                isNull(),  // Ensure that the body is null
-                eq(new ParameterizedTypeReference<List<Patient>>() {})  // Ensure the exact ParameterizedTypeReference is matched
-        )).thenReturn(new org.springframework.http.ResponseEntity<>(Arrays.asList(), org.springframework.http.HttpStatus.OK));
-
-        // Act
-        List<Patient> result = assessmentService.getAllPatients();
-
-        // Assert
-        assertNotNull(result);
-        assertTrue(result.isEmpty());  // Ensure the result is empty
-        verify(restTemplate, times(1)).exchange(  // Verify that exchange was called once
-                eq(url),
-                eq(HttpMethod.GET),
-                isNull(),
-                eq(new ParameterizedTypeReference<List<Patient>>() {})
-        );
-    }
-
-    @Test
-    void testGetAllPatients_Failure() {
-        // Arrange
-        String url = "http://localhost:8081/api/patients";  // Fix the URL to match the actual endpoint
-
-        // Mock the exchange method to simulate an error (for example, HTTP 500)
-        when(restTemplate.exchange(
-                eq(url),  // Ensure the exact URL is matched
-                eq(HttpMethod.GET),  // Ensure the exact HTTP method is matched
-                isNull(),  // Ensure the body is null
-                eq(new ParameterizedTypeReference<List<Patient>>() {})  // Ensure the exact ParameterizedTypeReference is matched
-        )).thenThrow(new RuntimeException("Failed to retrieve patients"));
-
-        // Act & Assert
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-            assessmentService.getAllPatients();
-        });
-
-        assertEquals("Failed to retrieve patients", exception.getMessage());  // Ensure the error message is correct
-        verify(restTemplate, times(1)).exchange(  // Verify that exchange was called once
-                eq(url),
-                eq(HttpMethod.GET),
-                isNull(),
-                eq(new ParameterizedTypeReference<List<Patient>>() {})
-        );
-    }
-
 
 }

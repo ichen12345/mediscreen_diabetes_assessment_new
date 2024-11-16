@@ -23,7 +23,7 @@ public class AssessmentServiceImpl implements AssessmentService {
     private RestTemplate restTemplate;
 
     @Value("${DEMOGRAPHIC_URL}")
-    private String DEMOGRAPHIC_SERVICE_URL;
+    private String DEMOGRAPHIC_URL;
     @Value("${NOTES_URL}")
     private String NOTES_SERVICE_URL;
 
@@ -39,7 +39,7 @@ public class AssessmentServiceImpl implements AssessmentService {
         try {
             // Fetch patient details by name
             Patient patient = restTemplate.getForObject(
-                    DEMOGRAPHIC_SERVICE_URL + "/api/patients/search?family=" + family + "&given=" + given, Patient.class);
+                    DEMOGRAPHIC_URL + "/api/patients/search?family=" + family + "&given=" + given, Patient.class);
 
             if (patient == null) {
                 throw new EntityNotFoundException("Patient not found with name: " + family + " " + given);
@@ -60,7 +60,7 @@ public class AssessmentServiceImpl implements AssessmentService {
     public String assessRiskById(Long patientId) {
         // Fetch patient details by ID
         Patient patient = restTemplate.getForObject(
-                DEMOGRAPHIC_SERVICE_URL + "/api/patients/" + patientId, Patient.class);
+                DEMOGRAPHIC_URL + "/api/patients/" + patientId, Patient.class);
 
         // Throw an exception if the patient is not found
         if (patient == null) {
@@ -153,7 +153,7 @@ public class AssessmentServiceImpl implements AssessmentService {
 
     public List<Patient> getAllPatients() {
         return restTemplate.exchange(
-                DEMOGRAPHIC_SERVICE_URL + "/api/patients",
+                DEMOGRAPHIC_URL + "/api/patients",
                 HttpMethod.GET,
                 null,
                 new ParameterizedTypeReference<List<Patient>>() {}).getBody();
