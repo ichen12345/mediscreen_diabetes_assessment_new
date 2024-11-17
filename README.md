@@ -26,7 +26,7 @@ This project is a **Spring Boot** application for managing patient diabetes asse
    ```bash
    git clone https://github.com/ichen12345/mediscreen_diabetes_assessment_new.git
 2. Run `mvn clean install` to build the project
-3. (Without Docker) Run the application with `mvn spring-boot:run`/ (With Docker) Run the application with docker using `docker compose up -d`
+3. Run the application with docker using `docker compose up -d`
 4. Verify that the application is running: Open your browser and navigate to http://localhost:8083/patients to view the list of patients.
 
 ## Usage
