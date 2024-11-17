@@ -11,9 +11,12 @@
     <th>Name</th>
   </tr>
   <tr th:each="patient : ${patients}">
+    <!-- Link for assessing by Patient ID (optional) -->
     <td><a th:href="@{'/patients/' + ${patient.patientId} + '/assessment'}"
            th:text="${patient.patientId}">Patient ID</a></td>
-    <td><a th:href="@{'/patients/' + ${patient.patientId} + '/assessment'}"
+
+    <!-- Link for assessing by Family Name and Given Name -->
+    <td><a th:href="@{'/patients/name/' + ${patient.family} + '/' + ${patient.givenName} + '/assessment'}"
            th:text="${patient.givenName + ' ' + patient.family}">Patient Name</a></td>
   </tr>
 </table>

@@ -16,6 +16,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
@@ -45,31 +46,63 @@ class ThymeleafPatientControllerTest {
                 .andReturn();
     }
 
+    // Test for getting patient assessment by ID
     @Test
-    void testGetPatientAssessment() throws Exception {
+    public void testGetPatientAssessmentById() throws Exception {
         Long patientId = 1L;
-        String assessmentResult = "Patient: John Doe (age 24) diabetes assessment is: None";
-        given(assessmentService.assessRiskById(patientId)).willReturn(assessmentResult);
+        String assessmentResult = "Patient: John Doe (age 30) diabetes assessment is: None";
 
-        // Perform GET request to /patients/{id}/assessment
+        // Mocking the service method for assessment by ID
+        when(assessmentService.assessRiskById(patientId)).thenReturn(assessmentResult);
+
         mockMvc.perform(get("/patients/{id}/assessment", patientId))
                 .andExpect(status().isOk())
                 .andExpect(view().name("assessment"))
-                .andExpect(model().attribute("assessmentResult", assessmentResult))
-                .andReturn();
+                .andExpect(model().attribute("assessmentResult", assessmentResult));
     }
 
+    // Test for getting patient assessment by full name (family and given name)
     @Test
-    void testGetPatientAssessment_NotFound() throws Exception {
-        Long patientId = 999L;
-        given(assessmentService.assessRiskById(patientId)).willThrow(new RuntimeException("Patient not found"));
+    public void testGetPatientAssessmentByFullName() throws Exception {
+        String familyName = "Doe";
+        String givenName = "John";
+        String assessmentResult = "Patient: John Doe (age 30) diabetes assessment is: None";
 
-        // Perform GET request to /patients/{id}/assessment with a non-existing patient ID
+        // Mocking the service method for assessment by name
+        when(assessmentService.assessRiskByName(familyName, givenName)).thenReturn(assessmentResult);
+
+        mockMvc.perform(get("/patients/name/{family}/{given}/assessment", familyName, givenName))
+                .andExpect(status().isOk())
+                .andExpect(view().name("assessment"))
+                .andExpect(model().attribute("assessmentResult", assessmentResult));
+    }
+
+    // Test when the assessment fails (e.g., patient not found)
+    @Test
+    public void testGetPatientAssessmentById_Failure() throws Exception {
+        Long patientId = 1L;
+
+        // Mocking the service to throw an exception
+        when(assessmentService.assessRiskById(patientId)).thenThrow(new RuntimeException("Patient not found"));
+
         mockMvc.perform(get("/patients/{id}/assessment", patientId))
                 .andExpect(status().isOk())
                 .andExpect(view().name("assessment"))
-                .andExpect(model().attributeExists("errorMessage"))
-                .andExpect(model().attribute("errorMessage", "Patient assessment not found or an error occurred."))
-                .andReturn();
+                .andExpect(model().attribute("errorMessage", "Patient assessment not found or an error occurred."));
+    }
+
+    // Test when the assessment fails by full name
+    @Test
+    public void testGetPatientAssessmentByFullName_Failure() throws Exception {
+        String familyName = "Doe";
+        String givenName = "John";
+
+        // Mocking the service to throw an exception
+        when(assessmentService.assessRiskByName(familyName, givenName)).thenThrow(new RuntimeException("Patient not found"));
+
+        mockMvc.perform(get("/patients/name/{family}/{given}/assessment", familyName, givenName))
+                .andExpect(status().isOk())
+                .andExpect(view().name("assessment"))
+                .andExpect(model().attribute("errorMessage", "Patient assessment not found or an error occurred."));
     }
 }

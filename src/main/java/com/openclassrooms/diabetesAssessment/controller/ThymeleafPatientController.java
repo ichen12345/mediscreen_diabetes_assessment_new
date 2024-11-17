@@ -26,9 +26,24 @@ public class ThymeleafPatientController {
 
     // Details page for showing assessment results of a specific patient
     @GetMapping("/patients/{id}/assessment")
-    public String getPatientAssessment(@PathVariable("id") Long patId, Model model) {
+    public String getPatientAssessmentById(@PathVariable("id") Long patId, Model model) {
         try {
             String assessmentResult = assessmentService.assessRiskById(patId);
+            model.addAttribute("assessmentResult", assessmentResult);
+        } catch (Exception e) {
+            model.addAttribute("errorMessage", "Patient assessment not found or an error occurred.");
+        }
+        return "assessment"; // Renders the "assessment.html" view
+    }
+
+    // Details page for showing assessment results of a specific patient by family and given name
+    @GetMapping("/patients/name/{family}/{given}/assessment")
+    public String getPatientAssessmentByFullName(@PathVariable("family") String family,
+                                                 @PathVariable("given") String given,
+                                                 Model model) {
+        try {
+            // Call the service with both familyName and givenName
+            String assessmentResult = assessmentService.assessRiskByName(family, given);
             model.addAttribute("assessmentResult", assessmentResult);
         } catch (Exception e) {
             model.addAttribute("errorMessage", "Patient assessment not found or an error occurred.");

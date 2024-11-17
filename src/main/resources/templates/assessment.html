@@ -4,13 +4,17 @@
   <title>Patient Assessment</title>
 </head>
 <body>
-<h1>Patient Assessment Result</h1>
-<div th:if="${assessmentResult}">
-  <p th:text="${assessmentResult}"></p>
-</div>
+<h1>Patient Assessment</h1>
+
 <div th:if="${errorMessage}">
   <p th:text="${errorMessage}"></p>
 </div>
-<a href="/patients">Back to Patient List</a>
+
+
+<div th:if="${assessmentResult}">
+  <p th:text="${assessmentResult}"></p>
+</div>
+
+<a href="/patients">Back to Patients List</a>
 </body>
 </html>
