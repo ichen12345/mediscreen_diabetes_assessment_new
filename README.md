@@ -19,7 +19,7 @@ This project is a **Spring Boot** application for managing patient diabetes asse
 - Docker
 - MongoDB
 - PostgreSQL
-- 
+
 ## Setup
 
 1. Clone the repository:
